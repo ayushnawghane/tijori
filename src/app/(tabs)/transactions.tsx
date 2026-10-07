@@ -2,12 +2,13 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { SectionList, StyleSheet, TextInput, View } from 'react-native';
+import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { TransactionRow } from '@/components/transaction-row';
-import { AppText } from '@/components/ui/app-text';
+import { AppText, Em } from '@/components/ui/app-text';
 import { PressableScale } from '@/components/ui/pressable-scale';
-import { Fonts, Radius } from '@/constants/theme';
+import { Fonts, Radius, Shadow, rise } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { filterTransactions, groupByDay, type TxnFilter } from '@/lib/insights';
 import { formatMoney } from '@/lib/money';
@@ -25,6 +26,7 @@ export default function TransactionsScreen() {
   const { transactions } = useTijori();
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<TxnFilter>('all');
+  const [searchFocused, setSearchFocused] = useState(false);
 
   const sections = useMemo(
     () => groupByDay(filterTransactions(transactions, query, filter)),
@@ -34,18 +36,29 @@ export default function TransactionsScreen() {
   return (
     <View style={[styles.root, { backgroundColor: theme.bg }]}>
       <View style={[styles.top, { paddingTop: insets.top + 12 }]}>
-        <View>
-          <AppText variant="title">Transactions</AppText>
+        <Animated.View entering={rise(0)}>
+          <AppText variant="title">
+            Every <Em>rupee</Em>
+          </AppText>
           <AppText variant="caption" color={theme.textMuted}>
             {transactions.length} tracked from bank SMS
           </AppText>
-        </View>
+        </Animated.View>
 
-        <View style={[styles.search, { backgroundColor: theme.surfaceAlt }]}>
-          <Ionicons name="search" size={18} color={theme.textFaint} />
+        <Animated.View
+          entering={rise(1)}
+          style={[
+            styles.search,
+            { backgroundColor: theme.surfaceAlt, borderColor: searchFocused ? theme.sage : 'transparent' },
+          ]}>
+          <Ionicons name="search-outline" size={18} color={searchFocused ? theme.sageInk : theme.textFaint} />
           <TextInput
             value={query}
             onChangeText={setQuery}
+            onFocus={() => setSearchFocused(true)}
+            onBlur={() => setSearchFocused(false)}
+            cursorColor={theme.sageInk}
+            selectionColor={theme.sage}
             placeholder="Search merchant, category, amount"
             placeholderTextColor={theme.textFaint}
             style={[styles.input, { color: theme.text }]}
@@ -55,12 +68,12 @@ export default function TransactionsScreen() {
           />
           {query.length > 0 && (
             <PressableScale onPress={() => setQuery('')} hitSlop={10} accessibilityLabel="Clear search">
-              <Ionicons name="close-circle" size={18} color={theme.textFaint} />
+              <Ionicons name="close-circle-outline" size={19} color={theme.textFaint} />
             </PressableScale>
           )}
-        </View>
+        </Animated.View>
 
-        <View style={[styles.segment, { backgroundColor: theme.surfaceAlt }]}>
+        <Animated.View entering={rise(2)} style={[styles.segment, { backgroundColor: theme.surfaceAlt }]}>
           {FILTERS.map((f) => {
             const active = f.id === filter;
             return (
@@ -71,14 +84,14 @@ export default function TransactionsScreen() {
                 onPress={() => setFilter(f.id)}
                 accessibilityRole="tab"
                 accessibilityState={{ selected: active }}
-                style={[styles.segmentItem, active && { backgroundColor: theme.surface }]}>
-                <AppText variant="caption" color={active ? theme.text : theme.textMuted}>
+                style={[styles.segmentItem, active && { backgroundColor: theme.surface, boxShadow: Shadow.md }]}>
+                <AppText variant="label" color={active ? theme.text : theme.textMuted}>
                   {f.label}
                 </AppText>
               </PressableScale>
             );
           })}
-        </View>
+        </Animated.View>
       </View>
 
       <SectionList
@@ -107,7 +120,9 @@ export default function TransactionsScreen() {
         )}
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Ionicons name="search" size={28} color={theme.textFaint} />
+            <View style={[styles.emptyIcon, { backgroundColor: theme.sageSoft }]}>
+              <Ionicons name="leaf-outline" size={26} color={theme.sageInk} />
+            </View>
             <AppText variant="caption" color={theme.textMuted}>
               {transactions.length === 0 ? 'No transactions yet.' : 'Nothing matches that search.'}
             </AppText>
@@ -120,32 +135,34 @@ export default function TransactionsScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  top: { paddingHorizontal: 20, gap: 14, paddingBottom: 8 },
+  top: { paddingHorizontal: 24, gap: 18, paddingBottom: 8 },
   search: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    height: 48,
-    borderRadius: Radius.md,
-    paddingHorizontal: 14,
+    height: 52,
+    borderRadius: Radius.pill,
+    borderWidth: 1,
+    paddingHorizontal: 20,
   },
-  input: { flex: 1, fontFamily: Fonts.regular, fontSize: 15, paddingVertical: 0 },
-  segment: { flexDirection: 'row', padding: 4, borderRadius: Radius.md, gap: 4 },
+  input: { flex: 1, fontFamily: Fonts.regular, fontSize: 16, paddingVertical: 0 },
+  segment: { flexDirection: 'row', padding: 5, borderRadius: Radius.pill, gap: 4 },
   segmentItem: {
     flex: 1,
-    height: 34,
-    borderRadius: Radius.sm,
+    height: 40,
+    borderRadius: Radius.pill,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  listContent: { paddingHorizontal: 8, paddingBottom: 32 },
+  listContent: { paddingHorizontal: 10, paddingBottom: 48 },
   dayHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingTop: 18,
-    paddingBottom: 6,
+    paddingHorizontal: 14,
+    paddingTop: 24,
+    paddingBottom: 8,
   },
-  empty: { alignItems: 'center', gap: 10, paddingTop: 64 },
+  empty: { alignItems: 'center', gap: 12, paddingTop: 64 },
+  emptyIcon: { width: 60, height: 60, borderRadius: 30, alignItems: 'center', justifyContent: 'center' },
 });

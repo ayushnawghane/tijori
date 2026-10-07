@@ -4,35 +4,32 @@ import Animated, { FadeInDown, FadeOutDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppText } from '@/components/ui/app-text';
-import { Palette, Radius } from '@/constants/theme';
-import { useIsDark, useTheme } from '@/hooks/use-theme';
+import { Motion, Radius, Shadow } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 
 export type Notice = { id: number; text: string; tone: 'info' | 'error' };
 
-/** Small pill that floats above the tab bar. Rendered by TijoriProvider. */
+/** Small forest-ink pill that drifts up above the tab bar. Rendered by TijoriProvider. */
 export function Toast({ notice }: { notice: Notice | null }) {
   const theme = useTheme();
-  const dark = useIsDark();
   const insets = useSafeAreaInsets();
   if (!notice) return null;
 
-  // The pill is drawn in inverted colours, so its icon uses the opposite palette's accents.
-  const inverse = dark ? Palette.light : Palette.dark;
   const error = notice.tone === 'error';
   return (
-    <View pointerEvents="none" style={[styles.host, { bottom: insets.bottom + 92 }]}>
+    <View pointerEvents="none" style={[styles.host, { bottom: insets.bottom + 96 }]}>
       <Animated.View
         key={notice.id}
-        entering={FadeInDown.duration(220)}
-        exiting={FadeOutDown.duration(180)}
+        entering={FadeInDown.duration(Motion.standard).easing(Motion.ease)}
+        exiting={FadeOutDown.duration(Motion.fast)}
         accessibilityLiveRegion="polite"
-        style={[styles.pill, { backgroundColor: theme.text }]}>
+        style={[styles.pill, { backgroundColor: theme.hero, boxShadow: Shadow.xl }]}>
         <Ionicons
-          name={error ? 'alert-circle' : 'checkmark-circle'}
+          name={error ? 'alert-circle-outline' : 'leaf-outline'}
           size={18}
-          color={error ? inverse.danger : inverse.primary}
+          color={error ? theme.heroOut : theme.heroIn}
         />
-        <AppText variant="caption" color={theme.bg} numberOfLines={2} style={styles.text}>
+        <AppText variant="caption" color={theme.onHero} numberOfLines={2} style={styles.text}>
           {notice.text}
         </AppText>
       </Animated.View>
@@ -45,9 +42,9 @@ const styles = StyleSheet.create({
   pill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+    gap: 10,
+    paddingVertical: 13,
+    paddingHorizontal: 20,
     borderRadius: Radius.pill,
     maxWidth: 420,
   },

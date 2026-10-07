@@ -2,8 +2,9 @@ import { StyleSheet, View } from 'react-native';
 import Animated, { LinearTransition } from 'react-native-reanimated';
 
 import { CategoryAvatar } from '@/components/category-avatar';
-import { AppText } from '@/components/ui/app-text';
-import { Radius } from '@/constants/theme';
+import { AppText, Em } from '@/components/ui/app-text';
+import { Card } from '@/components/ui/card';
+import { Motion, Radius } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { getCategory } from '@/lib/categories';
 import type { MonthSummary } from '@/lib/insights';
@@ -18,9 +19,11 @@ export function SpendBreakdown({ summary }: { summary: MonthSummary }) {
   const hidden = slices.length - VISIBLE_ROWS;
 
   return (
-    <View style={[styles.card, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+    <Card padding={22} style={styles.card}>
       <View style={styles.header}>
-        <AppText variant="heading">Where it went</AppText>
+        <AppText variant="subtitle">
+          Where it <Em>went</Em>
+        </AppText>
         <AppText variant="caption" tabular color={theme.textMuted}>
           {formatMoney(spendPaise)}
         </AppText>
@@ -30,7 +33,7 @@ export function SpendBreakdown({ summary }: { summary: MonthSummary }) {
         {slices.map((s) => (
           <Animated.View
             key={s.category}
-            layout={LinearTransition.duration(260)}
+            layout={LinearTransition.duration(Motion.standard).easing(Motion.ease)}
             style={{ flex: Math.max(s.share, 0.012), backgroundColor: getCategory(s.category).color }}
           />
         ))}
@@ -39,7 +42,7 @@ export function SpendBreakdown({ summary }: { summary: MonthSummary }) {
       <View style={styles.rows}>
         {slices.slice(0, VISIBLE_ROWS).map((s) => (
           <View key={s.category} style={styles.row}>
-            <CategoryAvatar categoryId={s.category} size={36} />
+            <CategoryAvatar categoryId={s.category} size={38} />
             <View style={styles.rowText}>
               <AppText variant="bodyStrong" numberOfLines={1}>
                 {getCategory(s.category).label}
@@ -59,27 +62,22 @@ export function SpendBreakdown({ summary }: { summary: MonthSummary }) {
           </AppText>
         )}
       </View>
-    </View>
+    </Card>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    borderRadius: Radius.xl,
-    borderWidth: StyleSheet.hairlineWidth,
-    padding: 18,
-    gap: 16,
-  },
+  card: { gap: 20 },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
   bar: {
     flexDirection: 'row',
-    height: 12,
-    borderRadius: 6,
+    height: 10,
+    borderRadius: Radius.pill,
     overflow: 'hidden',
-    gap: 2,
+    gap: 3,
   },
-  rows: { gap: 12 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  rows: { gap: 14 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 14 },
   rowText: { flex: 1 },
-  more: { marginLeft: 48 },
+  more: { marginLeft: 52 },
 });

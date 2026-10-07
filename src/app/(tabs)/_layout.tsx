@@ -13,15 +13,16 @@ export default function TabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: theme.primary,
+        tabBarActiveTintColor: theme.text,
         tabBarInactiveTintColor: theme.textFaint,
         tabBarStyle: {
-          backgroundColor: theme.surface,
+          backgroundColor: theme.bg,
           borderTopColor: theme.border,
-          height: 64 + insets.bottom,
-          paddingTop: 8,
+          height: 68 + insets.bottom,
+          paddingTop: 10,
+          elevation: 0,
         },
-        tabBarLabelStyle: { fontFamily: Fonts.semibold, fontSize: 12 },
+        tabBarLabelStyle: { fontFamily: Fonts.semibold, fontSize: 11, letterSpacing: 1.4, textTransform: 'uppercase' },
         sceneStyle: { backgroundColor: theme.bg },
       }}>
       <Tabs.Screen
@@ -29,7 +30,7 @@ export default function TabsLayout() {
         options={{
           title: 'Home',
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'home' : 'home-outline'} size={22} color={color} />
+            <Ionicons name={focused ? 'home' : 'home-outline'} size={21} color={color} />
           ),
         }}
       />
@@ -38,7 +39,7 @@ export default function TabsLayout() {
         options={{
           title: 'Transactions',
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'receipt' : 'receipt-outline'} size={22} color={color} />
+            <Ionicons name={focused ? 'receipt' : 'receipt-outline'} size={21} color={color} />
           ),
         }}
       />

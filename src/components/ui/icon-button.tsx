@@ -13,7 +13,8 @@ type IconButtonProps = {
   size?: number;
 };
 
-export function IconButton({ icon, label, onPress, disabled, size = 40 }: IconButtonProps) {
+/** A line icon floating in a soft, pale sage circle. */
+export function IconButton({ icon, label, onPress, disabled, size = 44 }: IconButtonProps) {
   const theme = useTheme();
   return (
     <PressableScale
@@ -24,8 +25,8 @@ export function IconButton({ icon, label, onPress, disabled, size = 40 }: IconBu
       hitSlop={6}
       disabled={disabled}
       onPress={onPress}
-      style={[styles.base, { width: size, height: size, borderRadius: size / 2, backgroundColor: theme.surfaceAlt }]}>
-      <Ionicons name={icon} size={Math.round(size * 0.5)} color={theme.text} />
+      style={[styles.base, { width: size, height: size, borderRadius: size / 2, backgroundColor: theme.sageSoft }]}>
+      <Ionicons name={icon} size={Math.round(size * 0.44)} color={theme.text} />
     </PressableScale>
   );
 }

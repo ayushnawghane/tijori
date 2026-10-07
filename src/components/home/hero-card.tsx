@@ -1,30 +1,40 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/ui/app-text';
-import { Radius, withAlpha } from '@/constants/theme';
+import { Radius, Shadow, withAlpha } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import type { IoniconName } from '@/lib/categories';
 import type { MonthSummary } from '@/lib/insights';
 import { formatMoney } from '@/lib/money';
 
+/** Fine 1px arcs in the top corner, like growth rings in a cut stem. Purely decorative. */
+const RINGS = [320, 236, 152];
+
 /** The month at a glance: net on top, money in / out underneath. */
 export function HeroCard({ summary }: { summary: MonthSummary }) {
   const theme = useTheme();
-  const muted = withAlpha('#FFFFFF', 0.72);
 
   return (
-    <LinearGradient
-      colors={[theme.heroStart, theme.heroEnd]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={styles.card}>
-      {/* Vault-door rings, purely decorative. */}
-      <View pointerEvents="none" style={[styles.ring, styles.ringOuter]} />
-      <View pointerEvents="none" style={[styles.ring, styles.ringInner]} />
+    <View style={[styles.card, { backgroundColor: theme.hero, boxShadow: Shadow.xl }]}>
+      {RINGS.map((d, i) => (
+        <View
+          key={d}
+          pointerEvents="none"
+          style={[
+            styles.ring,
+            {
+              width: d,
+              height: d,
+              right: -d / 2 + 24,
+              top: -d / 2 + 8,
+              borderColor: withAlpha(theme.heroLine, 0.22 + i * 0.08),
+            },
+          ]}
+        />
+      ))}
 
-      <AppText variant="label" color={muted}>
+      <AppText variant="label" color={theme.heroMuted}>
         Net this month
       </AppText>
       <AppText
@@ -36,34 +46,36 @@ export function HeroCard({ summary }: { summary: MonthSummary }) {
         style={styles.net}>
         {formatMoney(summary.netPaise)}
       </AppText>
-      <AppText variant="caption" color={muted}>
+      <AppText variant="caption" color={theme.heroMuted}>
         {summary.count === 0
           ? 'No transactions yet'
           : `${summary.count} transaction${summary.count === 1 ? '' : 's'}`}
       </AppText>
 
-      <View style={styles.stats}>
-        <Stat icon="arrow-down" label="Money in" value={summary.incomePaise} accent={theme.heroMint} />
-        <Stat icon="arrow-up" label="Money out" value={summary.spendPaise} accent={theme.heroGold} />
+      <View style={[styles.stats, { borderTopColor: withAlpha(theme.heroLine, 0.35) }]}>
+        <Stat icon="arrow-down" label="Money in" value={summary.incomePaise} accent={theme.heroIn} />
+        <View style={[styles.statDivider, { backgroundColor: withAlpha(theme.heroLine, 0.35) }]} />
+        <Stat icon="arrow-up" label="Money out" value={summary.spendPaise} accent={theme.heroOut} />
       </View>
-    </LinearGradient>
+    </View>
   );
 }
 
 function Stat({ icon, label, value, accent }: { icon: IoniconName; label: string; value: number; accent: string }) {
+  const theme = useTheme();
   return (
     <View style={styles.stat}>
-      <View style={[styles.statIcon, { backgroundColor: withAlpha(accent, 0.18) }]}>
-        <Ionicons name={icon} size={14} color={accent} />
-      </View>
-      <View style={styles.statText}>
-        <AppText variant="caption" color={withAlpha('#FFFFFF', 0.72)}>
+      <View style={styles.statLabel}>
+        <View style={[styles.statIcon, { backgroundColor: withAlpha(accent, 0.16) }]}>
+          <Ionicons name={icon} size={12} color={accent} />
+        </View>
+        <AppText variant="caption" color={theme.heroMuted}>
           {label}
         </AppText>
-        <AppText variant="heading" tabular color="#FFFFFF" numberOfLines={1} adjustsFontSizeToFit>
-          {formatMoney(value)}
-        </AppText>
       </View>
+      <AppText variant="subtitle" tabular color={theme.onHero} numberOfLines={1} adjustsFontSizeToFit>
+        {formatMoney(value)}
+      </AppText>
     </View>
   );
 }
@@ -71,34 +83,28 @@ function Stat({ icon, label, value, accent }: { icon: IoniconName; label: string
 const styles = StyleSheet.create({
   card: {
     borderRadius: Radius.xl,
-    padding: 22,
+    paddingHorizontal: 24,
+    paddingTop: 26,
+    paddingBottom: 22,
     overflow: 'hidden',
-    gap: 4,
+    gap: 2,
   },
-  ring: {
-    position: 'absolute',
-    borderRadius: 999,
-    borderColor: 'rgba(255,255,255,0.07)',
-  },
-  ringOuter: { width: 260, height: 260, right: -110, top: -120, borderWidth: 30 },
-  ringInner: { width: 120, height: 120, right: -40, top: -50, borderWidth: 14 },
-  net: { marginTop: 6 },
-  stats: { flexDirection: 'row', gap: 10, marginTop: 18 },
-  stat: {
-    flex: 1,
+  ring: { position: 'absolute', borderRadius: Radius.pill, borderWidth: 1 },
+  net: { marginTop: 10, marginBottom: 2 },
+  stats: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    padding: 12,
-    borderRadius: Radius.md,
-    backgroundColor: 'rgba(255,255,255,0.09)',
+    marginTop: 22,
+    paddingTop: 18,
+    borderTopWidth: StyleSheet.hairlineWidth,
   },
+  statDivider: { width: StyleSheet.hairlineWidth, marginHorizontal: 18 },
+  stat: { flex: 1, gap: 6 },
+  statLabel: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   statIcon: {
-    width: 28,
-    height: 28,
-    borderRadius: 9,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  statText: { flex: 1 },
 });
