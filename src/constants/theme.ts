@@ -1,65 +1,86 @@
 /**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
+ * Tijori's visual language: a deep "vault" emerald with a warm gold accent,
+ * soft tinted surfaces and Inter for type. Every screen reads colours from here.
  */
 
-import '@/global.css';
-
-import { Platform } from 'react-native';
-
-export const Colors = {
+export const Palette = {
   light: {
-    text: '#000000',
-    background: '#ffffff',
-    backgroundElement: '#F0F0F3',
-    backgroundSelected: '#E0E1E6',
-    textSecondary: '#60646C',
+    bg: '#F4F7F5',
+    surface: '#FFFFFF',
+    surfaceAlt: '#EBF0ED',
+    surfaceHigh: '#E1E8E4',
+    border: '#DCE4E0',
+    text: '#0F1513',
+    textMuted: '#5B6561',
+    textFaint: '#8A9490',
+    primary: '#0B6E5F',
+    primarySoft: '#D5EFE8',
+    onPrimary: '#FFFFFF',
+    gold: '#A9740A',
+    goldSoft: '#FBEFD2',
+    income: '#15803D',
+    danger: '#C0362C',
+    heroStart: '#0E7C6A',
+    heroEnd: '#063C34',
+    onHero: '#FFFFFF',
+    heroGold: '#F6CF6E',
+    heroMint: '#9BF0D8',
   },
   dark: {
-    text: '#ffffff',
-    background: '#000000',
-    backgroundElement: '#212225',
-    backgroundSelected: '#2E3135',
-    textSecondary: '#B0B4BA',
+    bg: '#080C0B',
+    surface: '#111715',
+    surfaceAlt: '#171F1C',
+    surfaceHigh: '#202925',
+    border: '#212A27',
+    text: '#E7EDEA',
+    textMuted: '#A0ABA7',
+    textFaint: '#6D7874',
+    primary: '#4FD1B5',
+    primarySoft: '#12322C',
+    onPrimary: '#03241E',
+    gold: '#F2C35B',
+    goldSoft: '#3A2E12',
+    income: '#4ADE80',
+    danger: '#FF8A80',
+    heroStart: '#0F5C50',
+    heroEnd: '#041A17',
+    onHero: '#FFFFFF',
+    heroGold: '#F6CF6E',
+    heroMint: '#9BF0D8',
   },
 } as const;
 
-export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
+export type ThemeColors = { [K in keyof typeof Palette.light]: string };
 
-export const Fonts = Platform.select({
-  ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
-    sans: 'system-ui',
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
-    serif: 'ui-serif',
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
-    rounded: 'ui-rounded',
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
-    mono: 'ui-monospace',
-  },
-  default: {
-    sans: 'normal',
-    serif: 'serif',
-    rounded: 'normal',
-    mono: 'monospace',
-  },
-  web: {
-    sans: 'var(--font-display)',
-    serif: 'var(--font-serif)',
-    rounded: 'var(--font-rounded)',
-    mono: 'var(--font-mono)',
-  },
-});
+export const Fonts = {
+  regular: 'Inter_400Regular',
+  medium: 'Inter_500Medium',
+  semibold: 'Inter_600SemiBold',
+  bold: 'Inter_700Bold',
+  mono: 'monospace',
+} as const;
+
+export const Radius = {
+  sm: 12,
+  md: 16,
+  lg: 22,
+  xl: 28,
+  pill: 999,
+} as const;
 
 export const Spacing = {
-  half: 2,
-  one: 4,
-  two: 8,
-  three: 16,
-  four: 24,
-  five: 32,
-  six: 64,
+  xs: 4,
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 20,
+  xxl: 28,
 } as const;
 
-export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;
-export const MaxContentWidth = 800;
+/** Appends an alpha channel to a #RRGGBB colour. */
+export function withAlpha(hex: string, alpha: number): string {
+  const a = Math.round(Math.min(1, Math.max(0, alpha)) * 255)
+    .toString(16)
+    .padStart(2, '0');
+  return `${hex}${a}`;
+}

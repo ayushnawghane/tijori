@@ -1,56 +1,68 @@
-# Welcome to your Expo app 👋
+# Tijori
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+**Your money, locked in your phone.** Tijori reads bank and card SMS on an Android phone, turns them into a clean ledger of what you spent and earned, and auto-categorises everything — without anything ever leaving the device.
 
-## Get started
+## Privacy model
 
-1. Install dependencies
+| Guarantee | How it's enforced |
+|---|---|
+| Nothing is uploaded | Release builds have the `INTERNET` permission **removed** from the manifest (`plugins/with-tijori-privacy.js`). The app physically can't reach the network. |
+| Only bank SMS are read | The native module drops any message from a phone-number sender before it reaches JS; the parser then ignores OTPs, reminders, offers and failed payments. |
+| Data is encrypted at rest | SQLCipher database with a random 256-bit key held in the Android Keystore (`expo-secure-store`). |
+| No OS backups | `allowBackup=false` plus data-extraction rules that exclude everything from cloud backup and device transfer. |
 
-   ```bash
-   npm install
-   ```
+## Running it
 
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+SMS access needs native code, so Tijori runs as a development build (not Expo Go) on an Android phone or emulator.
 
 ```bash
-npm run reset-project
+npm install
+npm run android        # = npx expo run:android — builds and installs the dev app
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+On an emulator, send test SMS from **Extended controls → Phone**, using a sender like `AD-HDFCBK`:
 
-### Other setup steps
+```
+Rs.450.00 debited from A/c XX1234 on 05-10-26 to VPA swiggy@icici. UPI Ref 627812345678
+```
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+Other scripts: `npm test` (parser tests), `npm run typecheck`, `npm run lint`.
 
-## Learn more
+To check the privacy guarantee on a release build:
 
-To learn more about developing your project with Expo, look at the following resources:
+```bash
+cd android && ./gradlew assembleRelease
+# then confirm INTERNET is absent:
+aapt dump permissions app/build/outputs/apk/release/app-release.apk
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## How it works
 
-## Join the community
+```
+Inbox / live SMS ──► native module (sender filter) ──► parser ──► categoriser ──► encrypted SQLite ──► UI
+```
 
-Join our community of developers creating universal apps.
+- **`modules/tijori-sms/`** — local Expo module (Kotlin). `readInboxAsync(since)` queries the SMS inbox; an `onSmsReceived` event streams new messages while the app is open.
+- **`src/lib/parser/`** — pure TypeScript, unit-tested:
+  - `sms-parser.ts` — amount, debit/credit, account, UPI handle, reference, merchant; rejects noise.
+  - `bank-directory.ts` — sender header (`HDFCBK`) → bank name. **Add new banks here.**
+  - `merchant.ts` — cleans merchant names and recognises brands and person-to-person UPI.
+  - `categorizer.ts` — user rules → income signals → keyword lists → body hints.
+- **`src/lib/db/`** — SQLCipher setup, migrations, and queries. Duplicate SMS are merged by UPI reference or by sender + body within 5 minutes.
+- **`src/state/`** — permission gate and the app store (scans on open/foreground, listens live, edits categories).
+- **`src/app/`** — Expo Router screens: onboarding, home dashboard, transactions, transaction detail.
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+The inbox is the source of truth, so if the app is uninstalled, reinstalling and rescanning rebuilds most of the history (custom categories are lost).
+
+## Adding a bank format
+
+1. Add a failing example to `src/lib/__tests__/sms-parser.test.ts`.
+2. Add the sender header to `bank-directory.ts` if it's new.
+3. Adjust the patterns in `sms-parser.ts` until `npm test` passes.
+
+## Roadmap
+
+- Biometric app lock
+- Encrypted export / import backup file (user picks where to save it)
+- Recurring payment detection (subscriptions, EMIs, salary)
+- Budgets per category
